@@ -94,8 +94,11 @@ class AudioPlayer(val player: AnimPlayer) {
         val bufferInfo = MediaCodec.BufferInfo()
         val sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
         val channelConfig = getChannelConfig(format.getInteger(MediaFormat.KEY_CHANNEL_COUNT))
+
+        val outputFormat = decoder.outputFormat
+        ALog.i(TAG, "audio output format:$outputFormat")
         // 默认16bit 但某些手机（比如oppo ace android 11）使用 float
-        val pcmEncoding = getInteger(format, "pcm-encoding", AudioFormat.ENCODING_PCM_16BIT)
+        val pcmEncoding = getInteger(outputFormat, "pcm-encoding", AudioFormat.ENCODING_PCM_16BIT)
 
         val bufferSize = AudioTrack.getMinBufferSize(sampleRate, channelConfig, pcmEncoding)
         val audioTrack = AudioTrack(AudioManager.STREAM_MUSIC, sampleRate, channelConfig, pcmEncoding, bufferSize, AudioTrack.MODE_STREAM)
