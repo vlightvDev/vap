@@ -18,7 +18,6 @@ package com.tencent.qgame.animplayer
 import android.media.*
 import com.tencent.qgame.animplayer.util.ALog
 import com.tencent.qgame.animplayer.util.MediaUtil
-import java.lang.RuntimeException
 
 class AudioPlayer(val player: AnimPlayer) {
 
@@ -74,7 +73,9 @@ class AudioPlayer(val player: AnimPlayer) {
         }
         extractor.selectTrack(audioIndex)
         val format = extractor.getTrackFormat(audioIndex)
-        val mime =format.getString(MediaFormat.KEY_MIME) ?: ""
+        ALog.i(TAG, "audio format:$format")
+
+        val mime = format.getString(MediaFormat.KEY_MIME) ?: ""
         if (!MediaUtil.checkSupportCodec(mime)) {
             ALog.e(TAG, "mime=$mime not support")
             release()
@@ -93,9 +94,11 @@ class AudioPlayer(val player: AnimPlayer) {
         val bufferInfo = MediaCodec.BufferInfo()
         val sampleRate = format.getInteger(MediaFormat.KEY_SAMPLE_RATE)
         val channelConfig = getChannelConfig(format.getInteger(MediaFormat.KEY_CHANNEL_COUNT))
+        // 默认16bit 但某些手机（比如oppo ace android 11）使用 float
+        val pcmEncoding = getInteger(format, "pcm-encoding", AudioFormat.ENCODING_PCM_16BIT)
 
-        val bufferSize = AudioTrack.getMinBufferSize(sampleRate, channelConfig, AudioFormat.ENCODING_PCM_16BIT)
-        val audioTrack = AudioTrack(AudioManager.STREAM_MUSIC, sampleRate, channelConfig, AudioFormat.ENCODING_PCM_16BIT, bufferSize, AudioTrack.MODE_STREAM)
+        val bufferSize = AudioTrack.getMinBufferSize(sampleRate, channelConfig, pcmEncoding)
+        val audioTrack = AudioTrack(AudioManager.STREAM_MUSIC, sampleRate, channelConfig, pcmEncoding, bufferSize, AudioTrack.MODE_STREAM)
         this.audioTrack = audioTrack
         val state = audioTrack.state
         if (state != AudioTrack.STATE_INITIALIZED) {
@@ -194,6 +197,15 @@ class AudioPlayer(val player: AnimPlayer) {
         }
     }
 
+    private fun getInteger(format: MediaFormat, name: String?, defaultValue: Int): Int {
+        try {
+            return format.getInteger(name)
+        } catch (e: NullPointerException) { ALog.e(TAG, "name:$name not found")
+        } catch (e: ClassCastException) { ALog.e(TAG, "name:$name not Integer")
+        }
+        return defaultValue
+    }
+
     private fun getChannelConfig(channelCount: Int): Int {
         return when (channelCount) {
             1 -> AudioFormat.CHANNEL_CONFIGURATION_MONO
@@ -206,4 +218,5 @@ class AudioPlayer(val player: AnimPlayer) {
             else -> throw RuntimeException("Unsupported channel count: $channelCount")
         }
     }
+
 }
