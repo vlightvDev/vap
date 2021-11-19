@@ -44,6 +44,11 @@
     _autoDestoryAfterFinish = YES;
 }
 
+- (void)setFrame:(CGRect)frame {
+    [super setFrame:frame];
+    self.vapView.frame = self.bounds;
+}
+
 // 因为播放停止后可能移除VAPView，这里需要加回来
 - (void)initVAPViewIfNeed {
     if (!_vapView) {
