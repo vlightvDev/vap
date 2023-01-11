@@ -80,10 +80,21 @@
     size_t yHeight = CVPixelBufferGetHeightOfPlane(pixelBuffer, 0);
     size_t uvWidth = CVPixelBufferGetWidthOfPlane(pixelBuffer, 1);
     size_t uvHeight = CVPixelBufferGetHeightOfPlane(pixelBuffer, 1);
-    //注意格式！r8Unorm
-    CVReturn yStatus = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, _videoTextureCache, pixelBuffer, nil, MTLPixelFormatR8Unorm, yWidth, yHeight, 0, &yTextureRef);
-    //注意格式！rg8Unorm
-    CVReturn uvStatus = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, _videoTextureCache, pixelBuffer, nil, MTLPixelFormatRG8Unorm, uvWidth, uvHeight, 1, &uvTextureRef);
+    CVReturn yStatus;
+    CVReturn uvStatus;
+    NSString *version = [UIDevice currentDevice].systemVersion;
+    if ([@"16.1" isEqualToString:version] || [@"16.1.0" isEqualToString:version] || [@"16.1.1" isEqualToString:version]) {
+        CVPixelBufferRef copyPixelBuffer = [self buffereCopyWithPixelBuffer:pixelBuffer];
+        //注意格式！r8Unorm
+        yStatus = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, _videoTextureCache, copyPixelBuffer, nil, MTLPixelFormatR8Unorm, yWidth, yHeight, 0, &yTextureRef);
+        //注意格式！rg8Unorm
+        uvStatus = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, _videoTextureCache, copyPixelBuffer, nil, MTLPixelFormatRG8Unorm, uvWidth, uvHeight, 1, &uvTextureRef);
+        CVPixelBufferRelease(copyPixelBuffer);
+    } else {
+        yStatus = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, _videoTextureCache, pixelBuffer, nil, MTLPixelFormatR8Unorm, yWidth, yHeight, 0, &yTextureRef);
+        //注意格式！rg8Unorm
+        uvStatus = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, _videoTextureCache, pixelBuffer, nil, MTLPixelFormatRG8Unorm, uvWidth, uvHeight, 1, &uvTextureRef);
+    }
     if (yStatus != kCVReturnSuccess || uvStatus != kCVReturnSuccess) {
         VAP_Error(kQGVAPModuleCommon, @"quit rendering cuz failing getting yuv texture-yStatus%@:uvStatus%@", @(yStatus), @(uvStatus));
         return ;
@@ -128,6 +139,38 @@
     [renderEncoder endEncoding];
     [commandBuffer presentDrawable:drawable];
     [commandBuffer commit];
+}
+
+- (CVPixelBufferRef)buffereCopyWithPixelBuffer:(CVPixelBufferRef)pixelBuffer {
+    // Get pixel buffer info
+    CVPixelBufferLockBaseAddress(pixelBuffer, 0);
+    int bufferWidth = (int)CVPixelBufferGetWidth(pixelBuffer);
+    int bufferHeight = (int)CVPixelBufferGetHeight(pixelBuffer);
+    size_t bytesPerRow = CVPixelBufferGetBytesPerRow(pixelBuffer);
+    uint8_t *baseAddress = CVPixelBufferGetBaseAddress(pixelBuffer);
+    OSType pixelFormat = kCVPixelFormatType_420YpCbCr8BiPlanarFullRange;
+    
+    // Copy the pixel buffer
+    CVPixelBufferRef pixelBufferCopy = NULL;
+    CFDictionaryRef empty = CFDictionaryCreate(kCFAllocatorDefault, NULL, NULL, 0, &kCFTypeDictionaryKeyCallBacks, &kCFTypeDictionaryValueCallBacks); // our empty IOSurface properties dictionary
+    NSDictionary *options = [NSDictionary dictionaryWithObjectsAndKeys:
+                             [NSNumber numberWithBool:YES], kCVPixelBufferCGImageCompatibilityKey,
+                             [NSNumber numberWithBool:YES], kCVPixelBufferCGBitmapContextCompatibilityKey,
+                             empty, kCVPixelBufferIOSurfacePropertiesKey,
+                             nil];
+    CVReturn status = CVPixelBufferCreate(kCFAllocatorDefault, bufferWidth, bufferHeight, pixelFormat, (__bridge CFDictionaryRef) options, &pixelBufferCopy);
+    if (status == kCVReturnSuccess) {
+        CVPixelBufferLockBaseAddress(pixelBufferCopy, 0);
+        uint8_t *copyBaseAddress = CVPixelBufferGetBaseAddress(pixelBufferCopy);
+        memcpy(copyBaseAddress, baseAddress, bufferHeight * bytesPerRow);
+    }else {
+        NSLog(@"buffereCopyWithPixelBuffer :: failed");
+    }
+    
+    CVPixelBufferUnlockBaseAddress(pixelBufferCopy, 0);
+    CVPixelBufferUnlockBaseAddress(pixelBuffer, 0);
+    
+    return pixelBufferCopy;
 }
 
 - (void)drawBackground:(id<MTLTexture>)yTexture uvTexture:(id<MTLTexture>)uvTexture encoder:(id<MTLRenderCommandEncoder>)renderEncoder {
