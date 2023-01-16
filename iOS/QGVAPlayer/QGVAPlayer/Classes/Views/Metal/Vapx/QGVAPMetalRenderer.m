@@ -82,8 +82,8 @@
     size_t uvHeight = CVPixelBufferGetHeightOfPlane(pixelBuffer, 1);
     CVReturn yStatus;
     CVReturn uvStatus;
-    NSString *version = [UIDevice currentDevice].systemVersion;
-    if ([@"16.1" isEqualToString:version] || [@"16.1.0" isEqualToString:version] || [@"16.1.1" isEqualToString:version]) {
+    double version = [UIDevice currentDevice].systemVersion.doubleValue;
+    if (version >= 16.0) {
         CVPixelBufferRef copyPixelBuffer = [self buffereCopyWithPixelBuffer:pixelBuffer];
         //注意格式！r8Unorm
         yStatus = CVMetalTextureCacheCreateTextureFromImage(kCFAllocatorDefault, _videoTextureCache, copyPixelBuffer, nil, MTLPixelFormatR8Unorm, yWidth, yHeight, 0, &yTextureRef);
