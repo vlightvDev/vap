@@ -94,7 +94,7 @@ void qg_VAP_Logger_handler(VAPLogLevel level, const char* file, int line, const 
 - (void)playVap {
     VAPView *mp4View = [[VAPView alloc] initWithFrame:CGRectMake(0, 0, 752/2, 752/2)];
     //默认使用metal渲染，使用OpenGL请打开下面这个开关
-    //mp4View.renderByOpenGL = YES;
+//    mp4View.hwd_renderByOpenGL = YES;
     mp4View.center = self.view.center;
     [self.view addSubview:mp4View];
     mp4View.userInteractionEnabled = YES;
@@ -107,7 +107,7 @@ void qg_VAP_Logger_handler(VAPLogLevel level, const char* file, int line, const 
     //指定素材混合模式，重复播放次数，delegate的接口
     
     //注意若素材不含vapc box，则必须用调用如下接口设置enable才可播放
-    //[mp4View enableOldVersion:YES];
+    [mp4View enableOldVersion:YES];
     [mp4View playHWDMP4:resPath repeatCount:-1 delegate:self];
 }
 

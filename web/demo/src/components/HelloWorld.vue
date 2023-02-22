@@ -27,14 +27,14 @@ export default {
         return
       }
       const that = this
-      this.vap = new Vap(Object.assign({}, {
+      this.vap = new Vap().play(Object.assign({}, {
         container: this.$refs.anim,
         // 素材视频链接
         src: this.url,
         // 素材配置json对象
         config: config,
         width: 900,
-        height: 600,
+        height: 400,
         // 同素材生成工具中配置的保持一致
         fps: 20,
         // 是否循环

@@ -47,7 +47,7 @@ VAP|***1.5M***|***硬解***|***全支持***
 
 素材制作工具：[VapTool](./tool) (工具使用说明在tool目录下)
 
-播放预览工具：[Mac](https://github.com/Tencent/vap/releases/download/VapPreview1.1.0/vap-player-1.1.0.dmg), [Windows](https://github.com/Tencent/vap/releases/download/VapPreview1.1.0/vap-player_1.1.0.exe)
+播放预览工具：[Mac](https://github.com/Tencent/vap/releases/download/VapPreview1.2.0/vap-player_mac_1.2.0.zip), [Windows](https://github.com/Tencent/vap/releases/download/VapPreview1.2.0/vap-player_1.2.0.exe)
 
 
 ## QQ交流群
@@ -64,8 +64,7 @@ VAP交流群：719738292
 
 ## 已接入APP
 
-![icons (4)](https://user-images.githubusercontent.com/3285051/139177497-311706f6-13c6-49b8-9e7a-3558778608c0.png)
-
+![VAP接入APP](https://user-images.githubusercontent.com/3285051/211699577-58c70501-02c4-440a-a3a8-2ba7cbec6da7.png)
 
 需要显示自己App图标，可以加入QQ群，群公告里有App图标加入说明
 
